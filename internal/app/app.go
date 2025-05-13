@@ -5,6 +5,7 @@ import (
 	"loadbalancer/config"
 	"loadbalancer/package/httpserver"
 	"loadbalancer/package/loadbalancer"
+	"loadbalancer/package/logger"
 	"log"
 	"os"
 	"os/signal"
@@ -13,20 +14,26 @@ import (
 )
 
 func Run(cfg *config.Config) {
-	// logger
+	// Logger
+	l := logger.New(cfg.Log.Level)
 
 	// Load Balancer
-	lb := loadbalancer.NewLoadBalancer(cfg.LoadBalancer.Backends)
+	lb := loadbalancer.NewLoadBalancer(cfg.LoadBalancer.Backends, l)
+	log.Println(cfg.LoadBalancer.Backends)
 	go loadbalancer.HealthCheck(lb)
 
 	// HTTP Server
-	log.Printf("Starting load balancer on :8080")
-	httpServer := httpserver.New(lb, httpserver.Port("8080")) // TODO: через конфиг
-	go httpServer.Start()
+	log.Printf("Starting load balancer on :%s", cfg.HTTP.Port)
+	httpServer := httpserver.New(lb, httpserver.Port(cfg.HTTP.Port))
+	go func() {
+		if err := httpServer.Start(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	// Waiting signal
 	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, syscall.SIGTERM)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
 	s := <-interrupt
 	log.Printf("app - Run - signal: %s", s.String())

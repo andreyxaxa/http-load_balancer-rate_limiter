@@ -7,11 +7,21 @@ import (
 
 type (
 	Config struct {
-		LoadBalancer LoadBalancer
+		LoadBalancer LoadBalancer `json:"load_balancer"`
+		HTTP         HTTP         `json:"http"`
+		Log          Log          `json:"log"`
 	}
 
 	LoadBalancer struct {
 		Backends []string `json:"backends"`
+	}
+
+	HTTP struct {
+		Port string `json:"http_port"`
+	}
+
+	Log struct {
+		Level string `json:"log_level"`
 	}
 )
 
