@@ -1,7 +1,6 @@
 package loadbalancer
 
 import (
-	"loadbalancer/package/logger"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -38,8 +37,6 @@ func (b *BackendImpl) CheckAlive() bool {
 type LoadBalancerImpl struct {
 	backends []*BackendImpl
 	index    int32
-
-	l logger.Interface // Dependency Injection
 }
 
 func (lb *LoadBalancerImpl) getNextBackend() *BackendImpl {
@@ -56,20 +53,20 @@ func (lb *LoadBalancerImpl) getNextBackend() *BackendImpl {
 }
 
 func (lb *LoadBalancerImpl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	lb.l.Info("Incoming request: %s %s", r.Method, r.URL.Path)
+	log.Printf("Incoming request: %s %s", r.Method, r.URL.Path)
 
 	backend := lb.getNextBackend()
 	if backend == nil {
-		lb.l.Warn("No backend available")
+		log.Println("No backend available")
 		http.Error(w, "No backend available", http.StatusServiceUnavailable)
 		return
 	}
 
-	lb.l.Info("Forwarding to backend : %s", backend.URL)
+	log.Printf("Forwarding to backend : %s", backend.URL)
 	backend.ReverseProxy.ServeHTTP(w, r)
 }
 
-func NewLoadBalancer(urls []string, l logger.Interface) *LoadBalancerImpl {
+func NewLoadBalancer(urls []string) *LoadBalancerImpl {
 	var backends []*BackendImpl
 
 	for _, u := range urls {
@@ -93,7 +90,6 @@ func NewLoadBalancer(urls []string, l logger.Interface) *LoadBalancerImpl {
 
 	return &LoadBalancerImpl{
 		backends: backends,
-		l:        l,
 	}
 }
 
@@ -104,7 +100,7 @@ func HealthCheck(lb *LoadBalancerImpl) {
 	for range ticker.C {
 		for _, b := range lb.backends {
 			b.Alive = b.CheckAlive()
-			lb.l.Info("Backend %s alive: %v", b.URL, b.Alive)
+			log.Printf("Backend %s alive: %v", b.URL, b.Alive)
 		}
 	}
 }

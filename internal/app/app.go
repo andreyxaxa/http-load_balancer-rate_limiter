@@ -2,10 +2,14 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"loadbalancer/config"
+	"loadbalancer/internal/app/repo/persistent"
 	"loadbalancer/package/httpserver"
 	"loadbalancer/package/loadbalancer"
 	"loadbalancer/package/logger"
+	"loadbalancer/package/postgres"
+	"loadbalancer/package/ratelimiter"
 	"log"
 	"os"
 	"os/signal"
@@ -17,14 +21,25 @@ func Run(cfg *config.Config) {
 	// Logger
 	l := logger.New(cfg.Log.Level)
 
+	// Repository
+	pg, err := postgres.New(cfg.PG.URL)
+	if err != nil {
+		l.Fatal(fmt.Errorf("app - Run - postgres.New: %w", err))
+	}
+	defer pg.Close()
+
+	// Rate Limiter
+	rl := ratelimiter.NewRateLimiter(persistent.New(pg))
+
 	// Load Balancer
-	lb := loadbalancer.NewLoadBalancer(cfg.LoadBalancer.Backends, l)
+	lb := loadbalancer.NewLoadBalancer(cfg.LoadBalancer.Backends)
 	log.Println(cfg.LoadBalancer.Backends)
 	go loadbalancer.HealthCheck(lb)
 
 	// HTTP Server
+	handler := rl.Middleware(lb)
 	log.Printf("Starting load balancer on :%s", cfg.HTTP.Port)
-	httpServer := httpserver.New(lb, httpserver.Port(cfg.HTTP.Port))
+	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 	go func() {
 		if err := httpServer.Start(); err != nil {
 			log.Fatal(err)
@@ -41,7 +56,7 @@ func Run(cfg *config.Config) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err := httpServer.Shutdown(ctx)
+	err = httpServer.Shutdown(ctx)
 	if err != nil {
 		log.Println("app - Run - httpServer.Shutdown: %w", err)
 	}

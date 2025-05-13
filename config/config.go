@@ -10,6 +10,7 @@ type (
 		LoadBalancer LoadBalancer `json:"load_balancer"`
 		HTTP         HTTP         `json:"http"`
 		Log          Log          `json:"log"`
+		PG           PG           `json:"pg"`
 	}
 
 	LoadBalancer struct {
@@ -23,9 +24,12 @@ type (
 	Log struct {
 		Level string `json:"log_level"`
 	}
+
+	PG struct {
+		URL string `json:"url"`
+	}
 )
 
-// TODO: подумать, как сделать конфиг лучше, так читать неприятно
 func NewConfig(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {

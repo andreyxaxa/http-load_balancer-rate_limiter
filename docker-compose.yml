@@ -1,0 +1,78 @@
+version: "3.9"
+
+x-db-environment: &x-db-environment
+  POSTGRES_SSL_MODE: "disable"
+  POSTGRES_HOST: "db"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "db"
+  POSTGRES_PASSWORD: "123"
+  POSTGRES_USER: "user"
+
+services:
+  mock1:
+    image: python:3.11-slim
+    depends_on:
+      - app
+    command: python -m http.server 9001
+    ports:
+      - "9001:9001"
+    working_dir: /srv
+    volumes:
+      - ./mock_data:/srv
+
+  mock2:
+    image: python:3.11-slim
+    depends_on:
+      - app
+    command: python -m http.server 9002
+    ports:
+      - "9002:9002"
+    working_dir: /srv
+    volumes:
+      - ./mock_data:/srv
+
+  mock3:
+    image: python:3.11-slim
+    depends_on:
+      - app
+    command: python -m http.server 9003
+    ports:
+      - "9003:9003"
+    working_dir: /srv
+    volumes:
+      - ./mock_data:/srv
+
+  db:
+    container_name: db
+    image: postgres:17-alpine
+    environment:
+      <<: *x-db-environment
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  migrate:
+    container_name: migrates
+    image: migrate/migrate
+    depends_on:
+      - db
+    volumes:
+      - ./migrations:/migrations
+    entrypoint: [
+      "migrate",
+      "-path", "/migrations",
+      "-database", "postgres://user:123@db:5432/db?sslmode=disable",
+      "up"
+    ]
+
+  app:
+    build: .
+    depends_on:
+      - db
+      - migrate
+    ports:
+      - "8080:8080"
+
+volumes:
+  db_data:

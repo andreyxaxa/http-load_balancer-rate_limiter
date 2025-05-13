@@ -1,8 +1,9 @@
 {
     "load_balancer": {
         "backends": [
-            "http://localhost:9001",
-            "http://localhost:9002"
+            "http://mock1:9001",
+            "http://mock2:9002",
+            "http://mock3:9003"
         ]
     },
     "log": {
@@ -10,5 +11,8 @@
     },
     "http": {
         "http_port": "8080"
+    },
+    "pg": {
+        "url": "postgres://user:123@db:5432/db?sslmode=disable"
     }
 }
