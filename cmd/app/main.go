@@ -1,10 +1,11 @@
 package main
 
 import (
-	"loadbalancer/config"
-	"loadbalancer/internal/app"
 	"log"
 	"os"
+
+	"github.com/andreyxaxa/http-load_balancer-rate_limiter/config"
+	"github.com/andreyxaxa/http-load_balancer-rate_limiter/internal/app"
 )
 
 func main() {

@@ -3,18 +3,19 @@ package app
 import (
 	"context"
 	"fmt"
-	"loadbalancer/config"
-	"loadbalancer/internal/app/repo/persistent"
-	"loadbalancer/package/httpserver"
-	"loadbalancer/package/loadbalancer"
-	"loadbalancer/package/logger"
-	"loadbalancer/package/postgres"
-	"loadbalancer/package/ratelimiter"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/andreyxaxa/http-load_balancer-rate_limiter/config"
+	"github.com/andreyxaxa/http-load_balancer-rate_limiter/internal/repo/persistent"
+	"github.com/andreyxaxa/http-load_balancer-rate_limiter/pkg/httpserver"
+	"github.com/andreyxaxa/http-load_balancer-rate_limiter/pkg/loadbalancer"
+	"github.com/andreyxaxa/http-load_balancer-rate_limiter/pkg/logger"
+	"github.com/andreyxaxa/http-load_balancer-rate_limiter/pkg/postgres"
+	"github.com/andreyxaxa/http-load_balancer-rate_limiter/pkg/ratelimiter"
 )
 
 func Run(cfg *config.Config) {

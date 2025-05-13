@@ -3,8 +3,9 @@ package persistent
 import (
 	"context"
 	"fmt"
-	"loadbalancer/package/postgres"
-	"loadbalancer/package/ratelimiter"
+
+	"github.com/andreyxaxa/http-load_balancer-rate_limiter/pkg/postgres"
+	"github.com/andreyxaxa/http-load_balancer-rate_limiter/pkg/ratelimiter"
 
 	"github.com/Masterminds/squirrel"
 )
